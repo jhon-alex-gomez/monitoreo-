@@ -1,0 +1,23 @@
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th scope="col">Nombre Interfaz</th>
+      <th scope="col">Ubicación</th>
+      <th scope="col">Token</th>
+      <th scope="col">Editar</th>
+    </tr>
+  </thead>
+  
+{{#each interfaz}}
+  <tbody>
+    <tr class="table-active">
+      <th scope="row">{{name}}</th>
+      <td>{{ubicacion}}</td>
+      <td>{{sensor_codigo}}</td>
+      <td><a href='/interfaz/edit-sensor/{{_id}}' class = "btn btn-success">Editar</a></td>
+    </tr>
+
+{{/each}}
+  </tbody>
+</table> 
