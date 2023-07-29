@@ -16,6 +16,7 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "connect-flash": "^0.1.1",
+    "dayjs": "^1.11.9",
     "express": "^4.17.1",
     "express-handlebars": "^5.3.2",
     "express-session": "^1.17.2",
@@ -32,6 +33,4 @@
     "nodemon": "^2.0.7",
     "npm-check-updates": "^11.1.4"
   }
-  
-  
 }

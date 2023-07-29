@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 
 const { NOTES_APP_MONGODB_HOST, NOTES_APP_MONGODB_DATABASE } = process.env;
 
-const MONGODB_URI = 'mongodb+srv://telematica:corozal12@cluster0.wtvf2.mongodb.net/DBTelematica?retryWrites=true&w=majority';
+const MONGODB_URI = 'mongodb+srv://jhongomez:alex1234@cluster0.etqvcjt.mongodb.net/DBTELE?retryWrites=true&w=majority';
 
 
 

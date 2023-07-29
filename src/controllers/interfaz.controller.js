@@ -1,4 +1,9 @@
 const interfazCtrl = {};
+const nodemailer = require('nodemailer');
+const dayjs = require('dayjs');
+require('dayjs/locale/es');
+
+
 
 //const Influx = require('influxdb-nodejs');
 //const client = new Influx('http://127.0.0.1:8086/dbMultimodal');
@@ -11,6 +16,7 @@ const interfazCtrl = {};
 const Interfaz = require("../models/Interfaz");
 const Users = require("../models/User");
 const DatosIoT = require("../models/datosiot");
+//const datosiot = require('../models/datosiot');
 
 
 //PARA RESPUESTA A LOS POST
@@ -32,7 +38,7 @@ interfazCtrl.renderInterfazForm = (req, res) => {
 //Guarda los datos de la nueva interfaz 
 interfazCtrl.createNewInterfaz = async (req, res) => {
 
-  const { name, ubicacion, info } = req.body;
+  const { name, ubicacion, info, sensor_1 , sensor_2} = req.body;
   const errors = [];
   if (!name) {
     errors.push({ text: "Por favor indique un nombre para la interfaz" });
@@ -40,16 +46,17 @@ interfazCtrl.createNewInterfaz = async (req, res) => {
   if (!ubicacion) {
     errors.push({ text: "Por favor indique donde está instalada la interfaz" });
   }
-  if (!info) {
-    errors.push({ text: "Por favor indique información de los sensores (info general)" });
-  }
+  //if (!info) {
+    //errors.push({ text: "Por favor indique información de los sensores (info general)" });
+  
 
   if (errors.length > 0) {
     res.render("interfaz/new-interfaz", {
       errors,
       name,
       ubicacion,
-      info
+      
+      
     });
   } else {
 
@@ -58,11 +65,11 @@ interfazCtrl.createNewInterfaz = async (req, res) => {
     var sensor_codigo = 0;
 
     //
-    const newSensor = new Interfaz({ name, ubicacion, info, sensor_codigo });
+    const newSensor = new Interfaz({ name, ubicacion, info , sensor_codigo, sensor_1, sensor_2 });
     newSensor.user = req.user.id;
     newSensor.sensor_codigo = newSensor.id;
     await newSensor.save();
-
+  
 
     let testAccount = await nodemailer.createTestAccount();
 
@@ -94,7 +101,7 @@ interfazCtrl.createNewInterfaz = async (req, res) => {
 
     };
     // Enviamos el email
-    transporter.sendMail(mailOptions, function (error, info) {
+   /* transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         console.log(error);
         res.send(500, err.message);
@@ -102,10 +109,11 @@ interfazCtrl.createNewInterfaz = async (req, res) => {
         console.log("Email sent");
         res.status(200).jsonp(req.body);
       }
-    });
+    });*/
 
     req.flash("success_msg", "Interfaz adicionada, revisar su mail para obtener TOKEN ");
     res.redirect("/interfaz");
+    
   }
 
 
@@ -114,6 +122,7 @@ interfazCtrl.createNewInterfaz = async (req, res) => {
 //Redirecciona para mostrar todos los sensores creados
 interfazCtrl.renderInterfaz = async (req, res) => {
   const interfaz = await Interfaz.find({ user: req.user.id }).sort({ date: "desc" });
+  console.log(interfaz)
   res.render("interfaz/all-interfaz", { interfaz });
 };
 
@@ -122,6 +131,32 @@ interfazCtrl.updateInterfaz = async (req, res) => {
   const sensor = await Interfaz.findById(req.params.id);
   console.log(sensor)
   res.render('interfaz/edit-interfaz', sensor);
+};
+
+// buscar los datos de de la base
+interfazCtrl.dataiot = async (req, res) => {
+  const datos = await DatosIoT.find({ token: req.params.id });
+  console.log(datos);
+  console.log(req.params.id);
+  
+  const temperaturas = datos.map(dato => dato.temperatura);
+  //const fechas = datos.map(dato =>dato.createdAt);
+  const fechas = datos.map(dato => dayjs(dato.createdAt).locale('es').format('mm'));
+
+  
+  console.log(temperaturas);
+  console.log(fechas);
+  
+  res.render('interfaz/grafica', { temperaturas, fechas });
+};
+
+//Eliminar sensor
+interfazCtrl.deleteinterfaz = async (req , res ) => {
+  console.log(req.params.id)
+await Interfaz.findByIdAndDelete(req.params.id);
+const borrar = await DatosIoT.deleteMany({ token :req.params.id });
+console.log(borrar)
+res.redirect('/interfaz')
 };
 
 //Guarda cambios de sensores en base de datos MongoDB
@@ -152,9 +187,10 @@ interfazCtrl.postValorWireless = async (req, res) => {
   var token = GSMprueba.token; //el token dado por la APP
   console.log(token);
   const idSensor = token; //se podría habilitar otro token diferente al Id MongodB
-  //const sensor = await Interfaz.findById(idSensor);//se obtienen los datos de la interfaz con el IdSensor
-  //console.log(sensor)
-  if (token=456) { //validación de seguridad
+  var sensor = await Interfaz.findById(idSensor);//se obtienen los datos de la interfaz con el IdSensor
+  var  toksensor = sensor.sensor_codigo;
+  console.log(toksensor); 
+  if (token==toksensor) { //validación de seguridad
 
     //const datuser = await Users.findById(sensor.user);//busca los datos de usuario para guardar en influx esos datos
     
@@ -162,11 +198,14 @@ interfazCtrl.postValorWireless = async (req, res) => {
     //var nameUser = datuser.email; //mail registrado en la App
 
     //Inicialización
-    var name = "Javier Sierra"//sensor.name; //nombre de la interfaz dada en la App
-    var ubicacion = "Unisucre";
+    const name = GSMprueba.name; //interfaz.name//sensor.name; //nombre de la interfaz dada en la App
+    var ubicacion =GSMprueba.ubicacion //"Unisucre";
     const temperatura = GSMprueba.temperatura;
     const humedad = GSMprueba.humedad;
-    const newDato = new DatosIoT({name, ubicacion, temperatura, humedad});
+    const token = GSMprueba.token;
+    const sensor_1 = GSMprueba.sensor_1;
+    const sensor_2 = GSMprueba.sensor_2;
+    const newDato = new DatosIoT({name, ubicacion, temperatura, humedad ,token, sensor_1, sensor_2});
     //datuser.user = req.user.id;
     await newDato.save();
     console.log("Dato almacenado en MongoDB")

@@ -21,7 +21,16 @@ const InterfazSchema = new Schema(
     user: {
       type: String,
       required: false
+    },
+    sensor_1:{
+      type: String,
+      require: false
+    },
+    sensor_2:{
+      type: String,
+      require: false
     }
+  
   },
   {
     timestamps: true

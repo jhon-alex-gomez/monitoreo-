@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gráfica de temperatura</title>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+</head>
+<body>
+  <div id="grafica"></div>
+
+  <script>
+    // Obtén los datos pasados desde el controlador
+    var temperaturas = [{{ temperaturas }}];
+    var fechas = [{{fechas}}];
+
+    // Crear el gráfico utilizando Highcharts
+    Highcharts.chart('grafica', {
+      chart: { type: 'line' },
+      title: { text: 'Gráfica de temperatura' },
+      xAxis: {
+        type: 'datetime',
+        categories: fechas
+      },
+      yAxis: {
+        title: {
+          text: 'Temperatura'
+        }
+      },
+      series: [{
+        name: 'Temperatura',
+        data: temperaturas,
+        color: 'rgba(75, 192, 192, 1)',
+        lineWidth: 1
+      }]
+    });
+  </script>
+</body>
+</html>

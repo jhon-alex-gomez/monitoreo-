@@ -8,7 +8,9 @@ const {
   renderInterfaz,
   updateInterfaz,
   editarInterfaz,
-  postValorWireless
+  postValorWireless,
+  deleteinterfaz,
+dataiot
 } = require("../controllers/interfaz.controller");
 
 // Helpers
@@ -20,6 +22,9 @@ router.post("/interfaz/new-sensor", createNewInterfaz, isAuthenticated);
 router.get("/interfaz", renderInterfaz, isAuthenticated);
 router.get("/interfaz/edit-sensor/:id", updateInterfaz, isAuthenticated);
 router.post("/interfaz/editar", editarInterfaz, isAuthenticated);
+router.delete("/interfaz/delete-sensor/:id", deleteinterfaz , isAuthenticated);
+// ver datos
+router.get("/interfaz/visulizar-sensor/:id", dataiot, isAuthenticated);
 
 
 // Recibir los valores por navegador

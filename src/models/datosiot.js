@@ -17,6 +17,18 @@ const DatosIoTSchema = new Schema(
     humedad: {
       type: String,
       required: false
+    },
+    token: {
+      type: String,
+      required: false
+    },
+    sensor_1: {
+      type: String,
+      required: false
+    },
+    sensor_2: {
+      type: String,
+      required: false
     }
   },
   {
