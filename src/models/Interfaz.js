@@ -29,7 +29,17 @@ const InterfazSchema = new Schema(
     sensor_2:{
       type: String,
       require: false
+    },
+    sensor_3:{
+      type: String,
+      require: false
+    },
+    n_sensor:{
+      type: Number,
+      require: false
     }
+  
+  
   
   },
   {

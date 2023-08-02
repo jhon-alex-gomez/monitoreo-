@@ -29,6 +29,10 @@ const DatosIoTSchema = new Schema(
     sensor_2: {
       type: String,
       required: false
+    },
+    sensor_3: {
+      type: String,
+      required: false
     }
   },
   {

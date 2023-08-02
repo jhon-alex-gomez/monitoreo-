@@ -54,7 +54,7 @@ usersCtrl.renderSigninForm = (req, res) => {
 };
 
 usersCtrl.signin = passport.authenticate("local", {
-    successRedirect: "/home",
+    successRedirect: "/",
     failureRedirect: "/users/signin",
     failureFlash: true
   });

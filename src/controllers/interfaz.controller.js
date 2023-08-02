@@ -38,7 +38,7 @@ interfazCtrl.renderInterfazForm = (req, res) => {
 //Guarda los datos de la nueva interfaz 
 interfazCtrl.createNewInterfaz = async (req, res) => {
 
-  const { name, ubicacion, info, sensor_1 , sensor_2} = req.body;
+  const { name, ubicacion, info, sensor_1 , sensor_2, sensor_3, n_sensor} = req.body;
   const errors = [];
   if (!name) {
     errors.push({ text: "Por favor indique un nombre para la interfaz" });
@@ -65,7 +65,7 @@ interfazCtrl.createNewInterfaz = async (req, res) => {
     var sensor_codigo = 0;
 
     //
-    const newSensor = new Interfaz({ name, ubicacion, info , sensor_codigo, sensor_1, sensor_2 });
+    const newSensor = new Interfaz({ name, ubicacion, info , sensor_codigo, sensor_1, sensor_2, sensor_3, n_sensor });
     newSensor.user = req.user.id;
     newSensor.sensor_codigo = newSensor.id;
     await newSensor.save();
@@ -133,22 +133,35 @@ interfazCtrl.updateInterfaz = async (req, res) => {
   res.render('interfaz/edit-interfaz', sensor);
 };
 
-// buscar los datos de de la base
+// buscar los datos de de la base y manda los datos a la grafica
 interfazCtrl.dataiot = async (req, res) => {
-  const datos = await DatosIoT.find({ token: req.params.id });
-  console.log(datos);
-  console.log(req.params.id);
-  
-  const temperaturas = datos.map(dato => dato.temperatura);
-  //const fechas = datos.map(dato =>dato.createdAt);
-  const fechas = datos.map(dato => dayjs(dato.createdAt).locale('es').format('mm'));
+  const datos = await DatosIoT.find({ token: req.params.id }).sort({createdAt: -1}).limit(10);//consulta los ultimos 10 datos 
+  const ultimo_dato = datos.reverse();
+ // console.log(ultimo_dato);
+ // console.log(req.params.id);
 
+  const sensor = await Interfaz.findById( req.params.id );
+  console.log(sensor);
+  const numero_sensor = sensor.n_sensor;
+  console.log(numero_sensor);
+  const vs1 = sensor.sensor_1;
+  const vs2 = sensor.sensor_2;
+  const vs3 = sensor.sensor_3;
+  console.log(vs1);
+
+  const sensor1 = ultimo_dato.map(ultimo_dato => ultimo_dato.sensor_1).filter(valor => valor !== undefined);
+  const sensor2 = ultimo_dato.map(ultimo_dato => ultimo_dato.sensor_2).filter(valor => valor !== undefined);
+  const sensor3 = ultimo_dato.map(ultimo_dato => ultimo_dato.sensor_3).filter(valor => valor !== undefined);
+
+  //const fechas = datos.map(dato =>dato.createdAt);
+  const minuto = ultimo_dato.map(ultimo_dato => dayjs(ultimo_dato.createdAt).locale('es').format('mm'));
+  const hora = ultimo_dato.map(ultimo_dato => dayjs(ultimo_dato.createdAt).locale('es').format('MMM-DD,  HH:mm:ss')); //formato de hora
+  const [hora0, hora1, hora2, hora3, hora4, hora5, hora6, hora7, hora8, hora9] = hora; 
+ // console.log(fechas);
   
-  console.log(temperaturas);
-  console.log(fechas);
-  
-  res.render('interfaz/grafica', { temperaturas, fechas });
+  res.render('interfaz/grafica', { minuto , sensor1, sensor2, sensor3, vs1,vs2,vs2,hora, hora0, hora1, hora2, hora3, hora4, hora5, hora6, hora7, hora8, hora9});
 };
+
 
 //Eliminar sensor
 interfazCtrl.deleteinterfaz = async (req , res ) => {
@@ -205,7 +218,8 @@ interfazCtrl.postValorWireless = async (req, res) => {
     const token = GSMprueba.token;
     const sensor_1 = GSMprueba.sensor_1;
     const sensor_2 = GSMprueba.sensor_2;
-    const newDato = new DatosIoT({name, ubicacion, temperatura, humedad ,token, sensor_1, sensor_2});
+    const sensor_3 = GSMprueba.sensor_3;
+    const newDato = new DatosIoT({name, ubicacion, temperatura, humedad ,token, sensor_1, sensor_2, sensor_3});
     //datuser.user = req.user.id;
     await newDato.save();
     console.log("Dato almacenado en MongoDB")

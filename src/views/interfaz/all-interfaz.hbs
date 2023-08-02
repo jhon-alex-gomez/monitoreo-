@@ -17,10 +17,10 @@
     <tr class="table-active">
       <th scope="row">{{name}}</th>
       <td>{{ubicacion}}</td>
-      <td>{{info}} </td>
+      <td>{{sensor_1}}  {{sensor_2}}  {{sensor_3}} </td>
       <td>{{sensor_codigo}}</td>
-      <td><a href='/interfaz/visulizar-sensor/{{_id}}' class = "btn btn-success">Visualizar</a></td>
-      <td><a href='/interfaz/edit-sensor/{{_id}}' class = "btn btn-success">Editar</a></td>
+      <td><a href='/interfaz/visulizar-sensor/{{_id}}' class = "btn btn-block" style="background-color: #B0E57C; color: #fff;">Visualizar</a></td>
+      <td><a href='/interfaz/edit-sensor/{{_id}}' class = "btn btn-block" style="background-color: #B0E57C; color: #fff;">Editar</a></td>
       <td><form action='/interfaz/delete-sensor/{{_id}}?_method=DELETE' method="post">
           <input type="hidden" name="_method" value="DELETE">
           <button type="submit" class="btn btn-danger">

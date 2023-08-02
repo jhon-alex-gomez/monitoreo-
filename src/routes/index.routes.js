@@ -6,6 +6,6 @@ const { renderIndex, renderAbout, renderHome } = require("../controllers/index.c
 
 router.get("/", renderIndex);
 router.get("/about", renderAbout);
-router.get("/home", renderHome);
+//router.get("/home", renderHome); // se elimino la home
 
 module.exports = router;
