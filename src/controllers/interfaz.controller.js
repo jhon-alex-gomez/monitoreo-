@@ -162,7 +162,7 @@ interfazCtrl.dataiot = async (req, res) => {
   const [hora0, hora1, hora2, hora3, hora4, hora5, hora6, hora7, hora8, hora9] = hora; 
  // console.log(fechas);
   
-  res.render('interfaz/grafica', { minuto , sensor1, sensor2, sensor3, vs1,vs2,vs2,hora, hora0, hora1, hora2, hora3, hora4, hora5, hora6, hora7, hora8, hora9});
+  res.render('interfaz/grafica', { minuto , sensor1, sensor2, sensor3, vs1,vs2,vs3,hora, hora0, hora1, hora2, hora3, hora4, hora5, hora6, hora7, hora8, hora9});
 };
 
 
