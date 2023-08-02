@@ -2,7 +2,12 @@ const interfazCtrl = {};
 const nodemailer = require('nodemailer');
 const dayjs = require('dayjs');
 require('dayjs/locale/es');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault('America/Bogota');
 
 
 //const Influx = require('influxdb-nodejs');
@@ -155,7 +160,7 @@ interfazCtrl.dataiot = async (req, res) => {
 
   //const fechas = datos.map(dato =>dato.createdAt);
   const minuto = ultimo_dato.map(ultimo_dato => dayjs(ultimo_dato.createdAt).locale('es').format('mm'));
-  const hora = ultimo_dato.map(ultimo_dato => dayjs(ultimo_dato.createdAt).locale('es').format('MMM-DD,  HH:mm:ss')); //formato de hora
+  const hora = ultimo_dato.map(ultimo_dato => dayjs(ultimo_dato.createdAt).locale('es').format('DD-MMM, HH:mm:ss')); //formato de hora
   const [hora0, hora1, hora2, hora3, hora4, hora5, hora6, hora7, hora8, hora9] = hora; 
  // console.log(fechas);
   
