@@ -14,7 +14,7 @@ usersCtrl.singup = async (req, res) => {
   let errors = [];
   const { name, email, password, confirm_password,claveregistro } = req.body;
   //clave de registro para no permitir registros no deseados
-  if (claveregistro != "Manglar2023") {
+  if (claveregistro != "IOTopia") {
     errors.push({ text: "Clave de registro no coincide" });
   }
   if (password != confirm_password) {
