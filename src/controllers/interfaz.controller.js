@@ -182,7 +182,12 @@ interfazCtrl.editarInterfaz = async (req, res) => {
   Interfaz.findByIdAndUpdate(idSensor, {
     name: req.body.name,
     ubicacion: req.body.ubicacion,
-    info: req.body.info,
+    sensor_1: req.body.sensor_1,
+    sensor_2: req.body.sensor_2,
+    sensor_3: req.body.sensor_3,
+    n_sensor: req.body.n_sensor
+    
+
   }, (error, idSensor) => {
     console.log(error, idSensor)
     res.redirect('/interfaz');
