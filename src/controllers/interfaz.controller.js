@@ -287,8 +287,8 @@ interfazCtrl.toggleSensor = async (req, res) => {
     await sensorInterfaz.save();
 
     // Enviar solicitud al ESP32
-    //const esp32Url = `http://${ip}/toggle`; // o usar el webhook si estás simulando
-     const esp32Url = 'https://webhook.site/7bcc3c13-33d2-43b6-8d3e-dc128349d21f';
+    const esp32Url = `http://${ip}/toggle`; // o usar el webhook si estás simulando
+    // const esp32Url = 'https://webhook.site/7bcc3c13-33d2-43b6-8d3e-dc128349d21f';
 
     await axios.post(esp32Url, { action: nuevoEstado });
 

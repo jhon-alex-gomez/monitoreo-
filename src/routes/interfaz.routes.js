@@ -19,14 +19,15 @@ const {
 const { isAuthenticated } = require("../helpers/auth");
 
 
-router.get("/interfaz/addsensor", renderInterfazForm, isAuthenticated);
-router.post("/interfaz/new-sensor", createNewInterfaz, isAuthenticated);
+router.get("/interfaz/addsensor", isAuthenticated, renderInterfazForm);
+router.post("/interfaz/new-sensor", isAuthenticated, createNewInterfaz);
 router.get("/interfaz", isAuthenticated, renderInterfaz);
-router.get("/interfaz/edit-sensor/:id", updateInterfaz, isAuthenticated);
-router.post("/interfaz/editar", editarInterfaz, isAuthenticated);
-router.delete("/interfaz/delete-sensor/:id", deleteinterfaz , isAuthenticated);
+router.get("/interfaz/edit-sensor/:id", isAuthenticated, updateInterfaz);
+router.post("/interfaz/editar", isAuthenticated, editarInterfaz);
+router.delete("/interfaz/delete-sensor/:id", isAuthenticated, deleteinterfaz);
+
 // ver datos
-router.get("/interfaz/visulizar-sensor/:id", dataiot, isAuthenticated);
+router.get("/interfaz/visualizar-sensor/:id", isAuthenticated, dataiot);
 
 
 // Recibir los valores por navegador
