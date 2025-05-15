@@ -6,15 +6,15 @@ const DatosIoTSchema = new Schema(
       type: String,
       required: false
     },
-    ubicacion: {
+    consumo: {
       type: String,
       required: false
     },
-    temperatura: {
+    voltaje: {
       type: String,
       required: false
     },
-    humedad: {
+    corriente: {
       type: String,
       required: false
     },
@@ -33,7 +33,12 @@ const DatosIoTSchema = new Schema(
     sensor_3: {
       type: String,
       required: false
+    },
+    ip: {
+      type: String,
+      required: false
     }
+
   },
   {
     timestamps: true

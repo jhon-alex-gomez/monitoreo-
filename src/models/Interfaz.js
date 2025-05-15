@@ -37,7 +37,12 @@ const InterfazSchema = new Schema(
     n_sensor:{
       type: Number,
       require: false
-    }
+    },
+      estado: {
+    type: String,
+    enum: ['on', 'off'],
+    default: 'on',
+  }
   
   
   

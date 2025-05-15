@@ -1,102 +1,226 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>Gráficas de temperatura</title>
-  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <meta charset="UTF-8">
+  <title>Gráfica IoT por rango reciente</title>
+  
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.0/dist/chartjs-plugin-zoom.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .chart-container {
+      width: 100%;
+      height: 500px; /* Hacerla más grande */
+      margin: auto;
+    }
+    .gauges {
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+      margin-top: 50px;
+    }
+    .gauge-box {
+      text-align: center;
+    }
+    canvas {
+      width: 100% !important; /* Hacer que el gráfico ocupe todo el contenedor */
+      height: 400px !important; /* Ajustar altura */
+    }
+  </style>
 </head>
 <body>
-  <div id="grafica1"></div>
-  <div id="grafica2"></div>
-  <div id="grafica3"></div>
+
+  <h2 style="text-align: center;">Visualización de Datos IoT</h2>
+  <h3 style="text-align: center;">Consumo Total: <span id="total-consumo"></span></h3>
+
+  <div style="text-align: center; margin-bottom: 20px;">
+    <label for="rango">Mostrar datos de la:</label>
+    <select id="rango">
+      <option value="hora">Última hora</option>
+      <option value="dia">Último día</option>
+      <option value="semana">Última semana</option>
+      <option value="mes">Último mes</option>
+      <option value="todos">Todos los datos</option>
+    </select>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="consumoChart"></canvas>
+  </div>
+
+  <div class="gauges">
+    <div class="gauge-box">
+      <canvas id="voltajeGauge"></canvas>
+    </div>
+    <div class="gauge-box">
+      <canvas id="corrienteGauge"></canvas>
+    </div>
+  </div>
 
   <script>
-    // Obtén los datos pasados desde el controlador
-    var minuto = ["{{hora0}}","{{hora1}}","{{hora2}}","{{hora3}}","{{hora4}}","{{hora5}}","{{hora6}}","{{hora7}}","{{hora8}}","{{hora9}}"];
-    var minut = [{{minuto}}];
-    var sensor1 = [{{sensor1}}];
-    var sensor2 = [{{sensor2}}];    
-    var sensor3 = [{{sensor3}}];
-    var vs1 = "{{vs1}}";     
-    var vs2 = "{{vs2}}";  
-    var vs3 = "{{vs3}}"; 
-     
+    const consumoData = {{{cons}}};
+    const volt = {{{volt}}};
+    const cor = {{{cor}}};
+    const fechasISO = {{{fecha}}}; // ejemplo: ["2025-05-08T20:30:00Z", ...]
 
-    // Función para verificar si un arreglo tiene elementos
-    function tieneDatos(arreglo) {
-      return arreglo.length > 0;
+    const total = "{{{totalConsumo}}}"; // o puedes ponerlo entre comillas si es string
+    document.getElementById('total-consumo').textContent = total + ' W';
+
+    function filtrarPorRango(fechas, datos, tipo) {
+      const ahora = dayjs();
+      let inicio;
+
+      switch (tipo) {
+        case 'hora': inicio = ahora.subtract(1, 'hour'); break;
+        case 'dia': inicio = ahora.subtract(1, 'day'); break;
+        case 'semana': inicio = ahora.subtract(1, 'week'); break;
+        case 'mes': inicio = ahora.subtract(1, 'month'); break;
+        default: return {
+          labels: fechas.map(f => dayjs(f).format('DD/MM HH:mm')),
+          valores: datos
+        };
+      }
+
+      const filtrados = fechas
+        .map((f, i) => ({ fecha: dayjs(f), valor: datos[i] }))
+        .filter(d => d.fecha.isAfter(inicio));
+
+      const labels = filtrados.map(d => d.fecha.format('DD/MM HH:mm'));
+      const valores = filtrados.map(d => d.valor);
+
+      return { labels, valores };
     }
 
-    // Crear la primera gráfica si el sensor1 tiene datos
-    if (tieneDatos(sensor1)) {
-      Highcharts.chart('grafica1', {
-        chart: { type: 'line' },
-        title: { text: 'Gráfica de ' + vs1 }, // Usamos el valor de vs1 como parte del título
-        xAxis: {
-          type: 'datetime',
-          categories: minuto
+    const ctx = document.getElementById('consumoChart').getContext('2d');
+    let grafico;
+
+    function renderGrafico(tipoRango) {
+      const filtrado = filtrarPorRango(fechasISO, consumoData, tipoRango);
+
+      if (grafico) grafico.destroy();
+
+      grafico = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: filtrado.labels,
+          datasets: [{
+            label: 'Consumo (W)',
+            data: filtrado.valores,
+            borderColor: 'blue',
+            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointHoverRadius: 10,
+            pointHoverBackgroundColor: 'red'
+          }]
         },
-        yAxis: {
-          title: {
-            text: vs1
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: `Consumo en ${tipoRango === 'todos' ? 'todo el período' : 'la última ' + tipoRango}`
+            },
+            legend: {
+              display: true
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                maxRotation: 45,
+                minRotation: 45,
+                autoSkip: true,
+                maxTicksLimit: 15
+              }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value + ' W'; // Mostrar unidades en el eje Y
+                }
+              }
+            }
+          },
+          zoom: {
+            enabled: true,
+            mode: 'xy',
+            speed: 0.1
           }
-        },
-        series: [{
-          name: vs1,
-          data: sensor1,
-          color: 'rgba(75, 192, 192, 1)',
-          lineWidth: 1
-        }]
+        }
       });
     }
 
-    // Crear la segunda gráfica si el sensor2 tiene datos
-    if (tieneDatos(sensor2)) {
-      Highcharts.chart('grafica2', {
-        chart: { type: 'line' },
-        title: { text: 'Gráfica de ' + vs2 },
-        xAxis: {
-          type: 'datetime',
-          categories: minuto
-        },
-        yAxis: {
-          title: {
-            text: vs2
-          }
-        },
-        series: [{
-          name: vs2,
-          data: sensor2,
-          color: 'rgba(192, 75, 192, 1)',
-          lineWidth: 1
-        }]
-      });
-    }
+    document.getElementById('rango').addEventListener('change', function () {
+      renderGrafico(this.value);
+    });
 
-    // Crear la tercera gráfica si el sensor3 tiene datos
-    if (tieneDatos(sensor3)) {
-      Highcharts.chart('grafica3', {
-        chart: { type: 'line' },
-        title: { text: 'Gráfica de ' + vs3 },
-        xAxis: {
-          type: 'datetime',
-          categories: minuto
-        },
-        yAxis: {
-          title: {
-            text: vs3
-          }
-        },
-        series: [{
-          name: vs3,
-          data: sensor3,
-          color: 'rgba(192, 192, 75, 1)',
-          lineWidth: 1
-        }]
-      });
+    renderGrafico('hora'); // por defecto
+
+   // Indicadores
+const ultimoVolt = volt[volt.length - 1] || 0;
+const ultimoCor = cor[cor.length - 1] || 0;
+
+new Chart(document.getElementById('voltajeGauge'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Voltaje', 'Resto'],
+    datasets: [{
+      data: [ultimoVolt, 220 - ultimoVolt], // Asegúrate que 220 sea el valor máximo
+      backgroundColor: ['orange', '#eee'],
+      borderWidth: 1
+    }]
+  },
+  options: {
+    cutout: '80%',
+    rotation: 3 * Math.PI / 2,
+    plugins: {
+      title: {
+        display: true,
+        text: `Voltaje: ${ultimoVolt} V`
+      },
+      legend: { display: false }
+    },
+    responsive: true
+  }
+});
+
+
+
+
+new Chart(document.getElementById('corrienteGauge'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Corriente', 'Resto'],
+    datasets: [{
+      data: [ultimoCor, 30 - ultimoCor],
+      backgroundColor: ['green', '#eee'],
+      borderWidth: 1
+    }]
+  },
+  options: {
+    cutout: '80%',
+    rotation: -0.5 * Math.PI, // Esto hace que el gráfico comience desde la mitad izquierda (180 grados)
+    plugins: {
+      title: {
+        display: true,
+        text: `Corriente: ${ultimoCor} A`
+      },
+      legend: { display: false }
     }
+  }
+});
+
   </script>
+
 </body>
 </html>
-
-
 

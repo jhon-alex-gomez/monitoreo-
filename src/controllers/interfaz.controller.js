@@ -4,6 +4,8 @@ const dayjs = require('dayjs');
 require('dayjs/locale/es');
 
 
+
+
 //const Influx = require('influxdb-nodejs');
 //const client = new Influx('http://127.0.0.1:8086/dbMultimodal');
 //const {InfluxDB} = require('@influxdata/influxdb-client');
@@ -37,14 +39,12 @@ interfazCtrl.renderInterfazForm = (req, res) => {
 //Guarda los datos de la nueva interfaz 
 interfazCtrl.createNewInterfaz = async (req, res) => {
 
-  const { name, ubicacion, info, sensor_1 , sensor_2, sensor_3, n_sensor} = req.body;
+  const { name, sensor_1 , sensor_2, sensor_3, n_sensor} = req.body;
   const errors = [];
   if (!name) {
     errors.push({ text: "Por favor indique un nombre para la interfaz" });
   }
-  if (!ubicacion) {
-    errors.push({ text: "Por favor indique donde está instalada la interfaz" });
-  }
+ 
   //if (!info) {
     //errors.push({ text: "Por favor indique información de los sensores (info general)" });
   
@@ -53,7 +53,7 @@ interfazCtrl.createNewInterfaz = async (req, res) => {
     res.render("interfaz/new-interfaz", {
       errors,
       name,
-      ubicacion,
+      
       
       
     });
@@ -64,7 +64,7 @@ interfazCtrl.createNewInterfaz = async (req, res) => {
     var sensor_codigo = 0;
 
     //
-    const newSensor = new Interfaz({ name, ubicacion, info , sensor_codigo, sensor_1, sensor_2, sensor_3, n_sensor });
+    const newSensor = new Interfaz({ name,sensor_codigo, sensor_1, sensor_2, sensor_3, n_sensor });
     newSensor.user = req.user.id;
     newSensor.sensor_codigo = newSensor.id;
     await newSensor.save();
@@ -134,36 +134,38 @@ interfazCtrl.updateInterfaz = async (req, res) => {
 
 // buscar los datos de de la base y manda los datos a la grafica
 interfazCtrl.dataiot = async (req, res) => {
-  const datos = await DatosIoT.find({ token: req.params.id }).sort({createdAt: -1}).limit(10);//consulta los ultimos 10 datos 
-  const ultimo_dato = datos.reverse();
- // console.log(ultimo_dato);
- // console.log(req.params.id);
+  try {
+    const datos = await DatosIoT.find({ token: req.params.id });
 
-  const sensor = await Interfaz.findById( req.params.id );
-  console.log(sensor);
-  const numero_sensor = sensor.n_sensor;
-  console.log(numero_sensor);
-  const vs1 = sensor.sensor_1;
-  const vs2 = sensor.sensor_2;
-  const vs3 = sensor.sensor_3;
-  console.log(vs1);
+    const cons = datos.map(d => d.consumo).filter(c => c !== undefined);
+    const volt = datos.map(d => d.voltaje).filter(v => v !== undefined);
+    const cor = datos.map(d => d.corriente).filter(v => v !== undefined);
+    const fecha = datos.map(d => d.createdAt.toISOString());
+    const consF = datos.map(d => parseFloat(d.consumo)); // forzamos a número
+    const totalConsumo = consF.reduce((acc, val) => acc + val, 0);
 
-  const sensor1 = ultimo_dato.map(ultimo_dato => ultimo_dato.sensor_1).filter(valor => valor !== undefined);
-  const sensor2 = ultimo_dato.map(ultimo_dato => ultimo_dato.sensor_2).filter(valor => valor !== undefined);
-  const sensor3 = ultimo_dato.map(ultimo_dato => ultimo_dato.sensor_3).filter(valor => valor !== undefined);
+    console.log(totalConsumo)
 
-  //const fechas = datos.map(dato =>dato.createdAt);
-  const minuto = ultimo_dato.map(ultimo_dato => dayjs(ultimo_dato.createdAt).locale('es').format('mm'));
-  //const hora = ultimo_dato.map(ultimo_dato => dayjs(ultimo_dato.createdAt).locale('es').format('DD-MMM,  HH:mm:ss')); //formato de hora
-  const hora = ultimo_dato.map((dato) => {
-    const fecha = dayjs(dato.createdAt).locale('es').subtract(5, 'hour');
-    return fecha.format('DD-MMM, HH:mm:ss');
-  });
-  const [hora0, hora1, hora2, hora3, hora4, hora5, hora6, hora7, hora8, hora9] = hora; 
- // console.log(fechas);
-  
-  res.render('interfaz/grafica', { minuto , sensor1, sensor2, sensor3, vs1,vs2,vs3,hora, hora0, hora1, hora2, hora3, hora4, hora5, hora6, hora7, hora8, hora9});
+    console.log(fecha)
+    console.log(consF)
+
+
+    // Serializa a JSON desde el controlador
+    res.render('interfaz/grafica', {
+      cons: JSON.stringify(cons),
+      volt: JSON.stringify(volt),
+      cor: JSON.stringify(cor),
+      fecha: JSON.stringify(fecha),
+      totalConsumo: JSON.stringify(totalConsumo)
+      
+    });
+  } catch (error) {
+    console.error('Error al consultar datos:', error);
+    res.status(500).send('Error al obtener los datos');
+  }
 };
+
+
 
 
 //Eliminar sensor
@@ -224,10 +226,12 @@ interfazCtrl.postValorWireless = async (req, res) => {
     const temperatura = GSMprueba.temperatura;
     const humedad = GSMprueba.humedad;
     const token = GSMprueba.token;
-    const sensor_1 = GSMprueba.sensor_1;
-    const sensor_2 = GSMprueba.sensor_2;
-    const sensor_3 = GSMprueba.sensor_3;
-    const newDato = new DatosIoT({name, ubicacion, temperatura, humedad ,token, sensor_1, sensor_2, sensor_3});
+    const consumo = GSMprueba.consumo;
+    const voltaje = GSMprueba.voltaje;
+    const corriente = GSMprueba.corriente;
+    const ip = GSMprueba.ip;
+    
+    const newDato = new DatosIoT({name, ubicacion, temperatura, humedad ,token, consumo, voltaje, corriente, ip});
     //datuser.user = req.user.id;
     await newDato.save();
     console.log("Dato almacenado en MongoDB")
@@ -247,13 +251,62 @@ interfazCtrl.postValorWireless = async (req, res) => {
      };
      res.send(respuesta);
    }
+  }
 
 
 
+const axios = require('axios');
 
+// Función para manejar el cambio de estado de un sensor
+interfazCtrl.toggleSensor = async (req, res) => {
+  try {
+    // Obtener IP desde DatosIoT usando el token
+    const sensorIoT = await DatosIoT.findOne({ token: req.params.id })
+      .sort({ createdAt: -1 }) // obtener el último
+      .exec();
 
+    if (!sensorIoT) {
+      return res.status(404).json({ message: 'Sensor no encontrado en DatosIoT' });
+    }
 
-}
+    const ip = sensorIoT.ip;
+    console.log('IP del sensor:', ip);
+
+    // Obtener estado desde Interfaz por ID
+    const sensorInterfaz = await Interfaz.findById(req.params.id);
+
+    if (!sensorInterfaz) {
+      return res.status(404).json({ message: 'Sensor no encontrado en Interfaz' });
+    }
+
+    const estadoActual = sensorInterfaz.estado || 'off';
+    const nuevoEstado = estadoActual === 'on' ? 'off' : 'on';
+
+    // Actualizar estado en Interfaz
+    sensorInterfaz.estado = nuevoEstado;
+    await sensorInterfaz.save();
+
+    // Enviar solicitud al ESP32
+    //const esp32Url = `http://${ip}/toggle`; // o usar el webhook si estás simulando
+     const esp32Url = 'https://webhook.site/7bcc3c13-33d2-43b6-8d3e-dc128349d21f';
+
+    await axios.post(esp32Url, { action: nuevoEstado });
+
+    res.json({
+      message: `Estado del sensor cambiado a ${nuevoEstado}`,
+      success: true,
+      estado: nuevoEstado,
+    });
+
+  } catch (error) {
+    console.error('Error al cambiar el estado del sensor:', error.message);
+    res.status(500).json({
+      message: 'Error al cambiar el estado del sensor',
+      error: error.message,
+    });
+  }
+};
+
 
 //
 
