@@ -1,4 +1,4 @@
-# plantillamanglar
+# Iotopia
 Plantilla que posee menú lateral, login de usuario, conexión a MongoDB
 
 #instalación
